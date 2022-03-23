@@ -7,7 +7,7 @@ from lxml import etree
 import enum
 import os, os.path
 import re
-import StringIO
+from io import StringIO
 import sys
 
 GTEST_RE = re.compile(r'TEST.*\((.+),(.+)\)')
@@ -48,15 +48,27 @@ class TestMsg:
 
     @property
     def msg_type(self):
-        return self.msg_type
+        return self._msg_type
+
+    @msg_type.setter
+    def msg_type(self, value):
+        self._msg_type = value
 
     @property
     def short_msg(self):
-        return self.msg_type
+        return self._short_msg
+
+    @short_msg.setter
+    def short_msg(self, value):
+        self._short_msg = value
 
     @property
     def long_msg(self):
-        return self.long_msg
+        return self._long_msg
+
+    @long_msg.setter
+    def long_msg(self, value):
+        self._long_msg = value
 
 
 class TestCase:
@@ -71,15 +83,27 @@ class TestCase:
 
     @property
     def name(self):
-        return self.name
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
 
     @property
     def duration(self):
-        return self.duration
+        return self._duration
 
+    @duration.setter
+    def duration(self, value):
+        self._duration = value
+    
     @property
     def msg(self):
-        return self.msg
+        return self._msg
+
+    @msg.setter
+    def msg(self, value):
+        self._msg = value
 
 
 class SonarTestExcution:
@@ -96,11 +120,19 @@ class SonarTestExcution:
 
     @property
     def test_cases(self):
-        return self.test_cases
+        return self._test_cases
+
+    @test_cases.setter
+    def test_cases(self, value):
+        self._test_cases = value
 
     @property
     def file_path(self):
-        return self.file_path
+        return self._file_path
+
+    @file_path.setter
+    def file_path(self, value):
+        self._file_path = value
 
 
 class SonarTestExcutionsXmlSerializer:
@@ -121,7 +153,7 @@ class SonarTestExcutionsXmlSerializer:
                     msg_tag = etree.SubElement(test_case_tag, tag_name, message=test_case.msg.short_msg)
                     msg_tag.text = test_case.msg.long_msg
 
-        return etree.tostring(root, pretty_print=True)
+        return etree.tostring(root, encoding='unicode', pretty_print=True)
 
 
 class GoogleTestReportParser:
@@ -133,14 +165,13 @@ class GoogleTestReportParser:
         sonarTestExcutions = {}
 
         regexp = re.compile(searching_report_file_pattern)
-
         for dirName, subdirList, fileList in os.walk(searching_folder_path):
             for fileName in fileList:
                 if regexp.search(fileName) is not None:
                     executionDict = GoogleTestReportParser.doParse(os.path.join(dirName, fileName),
                                                                    test_name_to_source_name)
 
-                    for key, value in executionDict.iteritems():
+                    for key, value in executionDict.items():
                         if key not in sonarTestExcutions:
                             sonarTestExcutions[key] = SonarTestExcution(key)
 
@@ -173,10 +204,10 @@ class GoogleTestReportParser:
                                      JUnitTestReportParser.doParseMsg(testCase))
                         )
                     else:
-                        print "Couldn't find test case named {} in source code. Skip it.".format(testName)
+                        print("Couldn't find test case named {} in source code. Skip it.".format(testName))
 
         except Exception as e:
-            print "Can't parse report file of {0}. Skip it. due to {1}".format(gtest_report_path, e)
+            print ("Can't parse report file of {0}. Skip it. due to {1}".format(gtest_report_path, e))
 
         return sonarTestExecutions
 
@@ -239,7 +270,7 @@ class JUnitTestReportParser:
                 )
 
         except Exception as e:
-            print "Can't parse report file of {0}. Skip it. due to {1}".format(report_file_path, e)
+            print ("Can't parse report file of {0}. Skip it. due to {1}".format(report_file_path, e))
 
         return sonarTestExecutions
 
