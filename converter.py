@@ -185,19 +185,20 @@ class GoogleTestReportParser:
         try:
             tree = etree.parse(gtest_report_path)
             testSuites = tree.xpath('/testsuites/testsuite')
-
+            
             for testSuite in testSuites:
-                test_suite_name = testSuite.get('name')
-
+                test_suite_name = testSuite.get('name').split('/')[-1]
+                
                 testCases = testSuite.xpath('testcase')
                 for testCase in testCases:
-                    testName = '{0}.{1}'.format(test_suite_name, testCase.get('name'))
-
+                    testName = '{0}.{1}'.format(test_suite_name, testCase.get('name').split('/')[0])
+                    
                     if testName in test_name_to_source_name:
                         test_file_name = test_name_to_source_name[testName]
+                        
                         if test_file_name not in sonarTestExecutions:
                             sonarTestExecutions[test_file_name] = SonarTestExcution(test_file_name)
-
+                            
                         sonarTestExecutions[test_file_name].add_test_case(
                             TestCase(testName,
                                      str(int(float(testCase.get('time')) * 1000)),
